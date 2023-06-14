@@ -1,9 +1,12 @@
 const std = @import("std");
 
 const cpu = @import("cpu.zig");
+const mem = @import("mem.zig");
 const constants = @import("const.zig");
 
 pub const OpCodeFunc = fn (*cpu.CPU) u8;
+
+pub const opCodes = [_]OpCodeFunc{};
 
 // zig fmt: off
 const parityTable =  [_]u8{
@@ -26,6 +29,9 @@ const parityTable =  [_]u8{
 };
 // zig fmt: on
 
+/// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+/// *                                                     Static Helper Functions                                                     *
+/// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 ///
 /// TODO: Fix logic in this function. Decide how to use.
 /// Multiple flag functions to set individual flags? Single function?
@@ -91,5 +97,21 @@ fn LRR(c: *cpu.CPU) u8 {
     const destR: *const u8 = GET_REG(c, dest);
 
     destR.* = srcR.*;
+    return 0;
+}
+
+///
+/// Load Register R with value from M (HL)
+///
+fn LRM(c: *cpu.CPU) u8 {
+    _ = c;
+    const mask: u8 = 0b00000111;
+    const dest: u8 = (cpu.inst >> 3) & mask;
+
+    const destR: *u8 = GET_REG(cpu, dest);
+    const m: u16 = (cpu.reg.H << 8) | (cpu.reg.L);
+
+    destR.* = mem.READ_MEM(m);
+
     return 0;
 }

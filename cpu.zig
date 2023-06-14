@@ -53,8 +53,10 @@
 /// *
 /// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 const HALT = @import("const.zig").HALT;
+const mem = @import("mem.zig");
+const insts = @import("inst.zig");
 
-const STATES = struct {
+pub const STATES = struct {
     S0: u1,
     S1: u1,
     S2: u1,
@@ -105,7 +107,7 @@ const REG = struct {
 /// Condition Flip Flops
 /// * These bits provide conditional branching capability through CALL, JUMP, or RETURN on condition instructions.
 /// * Carry bit provides the ability to do multiple precision binary arithmetic
-const FLAGS = struct {
+pub const FLAGS = struct {
     C: u1, // Carry
     P: u1, // Even Parity
     Z: u1, // Zero
@@ -137,22 +139,21 @@ pub const CPU = struct {
     // *
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-    // pub fn fetch(cpu: *CPU) void {
-    //     // check states?
-    //     cpu.inst = RAM[cpu.stack.PC];
-    // }
+    pub fn fetch(cpu: *CPU) void {
+        // check states?
+        cpu.inst = mem.RAM[cpu.stack.PC];
+    }
 
-    // pub fn decode(cpu: *CPU) u8 {
-    //     return opCodes[4](cpu);
-    // }
+    pub fn decode(cpu: *CPU) u8 {
+        return insts.opCodes[4](cpu);
+    }
 
-    // pub fn execute(cpu: *CPU) u8 {
-    //     const inst: OpCodeFunc = opCodes[4];
-    //     cpu.stack.PC += 1;
-    //     fetch(cpu);
-    //     return inst(cpu);
-    // }
-
+    pub fn execute(cpu: *CPU) u8 {
+        const inst: mem.OpCodeFunc = insts.opCodes[4];
+        cpu.stack.PC += 1;
+        fetch(cpu);
+        return inst(cpu);
+    }
 };
 
 /// Startup of the 8008
