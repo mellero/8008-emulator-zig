@@ -1,5 +1,6 @@
 const std = @import("std");
 const cpu = @import("cpu.zig");
+const insts = @import("inst.zig");
 
 pub fn main() !void {
     const stdout = std.io.getStdOut().writer();
@@ -10,8 +11,13 @@ pub fn main() !void {
     _ = opCyclesRemaining;
     var c: cpu.CPU = cpu.initCPU();
 
-    // Print
-    inline for (std.meta.fields(@TypeOf(c))) |f| {
-        std.log.debug(f.name ++ " {any}", .{@as(f.type, @field(c, f.name))});
+    _ = insts.OpCodeFunc;
+
+    print_struct(c);
+}
+
+fn print_struct(obj: anytype) void {
+    inline for (std.meta.fields(@TypeOf(obj))) |f| {
+        std.log.debug(f.name ++ " {any}", .{@as(f.type, @field(obj, f.name))});
     }
 }
