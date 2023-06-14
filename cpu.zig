@@ -145,14 +145,18 @@ pub const CPU = struct {
     }
 
     pub fn decode(cpu: *CPU) u8 {
-        return insts.opCodes[4](cpu);
+        _ = cpu;
+        // return insts.opCodes[4](cpu);
+        return 0;
     }
 
     pub fn execute(cpu: *CPU) u8 {
-        const inst: mem.OpCodeFunc = insts.opCodes[4];
-        cpu.stack.PC += 1;
-        fetch(cpu);
-        return inst(cpu);
+        _ = cpu;
+        // const inst: mem.OpCodeFunc = insts.opCodes[4];
+        // cpu.stack.PC += 1;
+        // fetch(cpu);
+        // return inst(cpu);
+        return 0;
     }
 };
 

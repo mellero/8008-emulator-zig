@@ -1,8 +1,10 @@
+const std = @import("std");
+
 pub const MAX_MEM = 16384;
-pub const RAM = [MAX_MEM]u8{};
+pub const RAM = std.mem.zeroes([MAX_MEM]u8);
 
 pub fn LOAD_MEM() void {
-    const ASMFILE = [_]u8{"./output.txt"};
+    const ASMFILE = "./output.txt";
     _ = ASMFILE;
     // FILE* memfile;
     // char valueRead[8];
