@@ -34,6 +34,8 @@ pub fn main() !void {
     _ = insts.OpCodeFunc;
 
     print_struct(c);
+
+    try @import("./assembler/file.zig").read();
 }
 
 fn setStates(states: *cpu.STATES, currentState: u8) void {
