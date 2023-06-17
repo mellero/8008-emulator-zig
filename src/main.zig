@@ -2,8 +2,7 @@ const std = @import("std");
 const emulator = @import("emulator.zig");
 
 pub fn main() !void {
-    emulator.main();
-
+    try emulator.main();
     // // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
     // std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
 

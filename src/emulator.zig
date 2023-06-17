@@ -35,7 +35,7 @@ pub fn main() !void {
 
     print_struct(c);
 
-    try @import("./assembler/file.zig").read();
+    try @import("../assembler/file.zig").readInputFile();
 }
 
 fn setStates(states: *cpu.STATES, currentState: u8) void {
