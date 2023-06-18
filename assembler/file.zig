@@ -16,18 +16,20 @@ pub fn readInputFile() !void {
     while (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
         if (lineValue(line)) |value| {
             if (value.op) |op| {
-                var outputBuf: [64]u8 = undefined;
-                var fbs = std.io.fixedBufferStream(&outputBuf);
-                var writer = fbs.writer();
+                var opBin = try convertNumTypeToBinary(op);
 
-                try std.fmt.format(writer, "{s} => {s}", .{ line, op });
-                const imm = value.imm orelse "";
-                if (imm.len > 0) {
-                    // std.log.debug("\n\n imm = |{s}|\n", .{imm});
-                    try std.fmt.format(writer, " | {s}", .{imm});
+                if (value.imm.len > 0) {
+                    var immTrimmed = std.mem.trim(u8, value.imm, " ");
+                    if (immTrimmed.len > 0) {
+                        var immBin = try convertNumTypeToBinary(immTrimmed);
+                        var ptr: [:0]u8 = immBin[0.. :0];
+                        try logLineConversion(line, opBin, ptr);
+                    }
+                } else {
+                    const empty = "";
+                    const null_term: [:0]u8 = @constCast(empty ++ [_]u8{0});
+                    try logLineConversion(line, opBin, null_term);
                 }
-                std.log.debug("{s}", .{fbs.getWritten()});
-                // std.log.debug("OP HEX: {s} | {s}\n", .{ op, output });
             } else {
                 std.log.debug("Found bad opcode {s}", .{line});
             }
@@ -35,7 +37,20 @@ pub fn readInputFile() !void {
     }
 }
 
-const Line = struct { op: ?*const [2:0]u8, imm: ?[]u8 };
+fn logLineConversion(line: []u8, opBin: [8:0]u8, immBin: [:0]u8) !void {
+    var outputBuf: [1024]u8 = undefined;
+    var fbs = std.io.fixedBufferStream(&outputBuf);
+    var writer = fbs.writer();
+    try std.fmt.format(writer, "{s} => {s}", .{ line, opBin });
+
+    if (immBin.len > 1) {
+        try std.fmt.format(writer, " | {s}", .{immBin});
+    }
+
+    std.log.debug("{s}", .{fbs.getWritten()});
+}
+
+const Line = struct { op: ?*const [4:0]u8, imm: []const u8 };
 fn lineValue(line: []u8) ?Line {
     if (line.len >= 3) {
         const op = line[0..3];
@@ -46,36 +61,41 @@ fn lineValue(line: []u8) ?Line {
     return null;
 }
 
-const map = std.ComptimeStringMap(*const [2:0]u8, .{
-    .{ "ADI", "04" },
-    .{ "LAI", "06" },
-    .{ "ADA", "80" },
-    .{ "ADB", "81" },
-    .{ "ADC", "82" },
-    .{ "ADD", "83" },
-    .{ "ADE", "84" },
-    .{ "ADH", "85" },
-    .{ "ADL", "86" },
-    .{ "LBA", "C8" },
-    .{ "LBB", "C9" },
-    .{ "LBC", "CA" },
-    .{ "LBD", "CB" },
-    .{ "LBE", "CC" },
-    .{ "LBH", "CD" },
-    .{ "LBL", "CE" },
+const map = std.ComptimeStringMap(*const [4:0]u8, .{
+    .{ "ADI", "0x04" },
+    .{ "LAI", "0x06" },
+    .{ "ADA", "0x80" },
+    .{ "ADB", "0x81" },
+    .{ "ADC", "0x82" },
+    .{ "ADD", "0x83" },
+    .{ "ADE", "0x84" },
+    .{ "ADH", "0x85" },
+    .{ "ADL", "0x86" },
+    .{ "LBA", "0xC8" },
+    .{ "LBB", "0xC9" },
+    .{ "LBC", "0xCA" },
+    .{ "LBD", "0xCB" },
+    .{ "LBE", "0xCC" },
+    .{ "LBH", "0xCD" },
+    .{ "LBL", "0xCE" },
 });
 
 const NumType = enum { decimal, hex, binary };
 
 const RadixError = error{InvalidNumType};
 
-fn convertNumTypeToBinary(input: []u8) ![]u8 {
-    var outputBuf: [64]u8 = undefined;
+fn convertNumTypeToBinary(input: []const u8) ![8:0]u8 {
+    var outputBuf: [9]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&outputBuf);
     var writer = fbs.writer();
+
     const result = try std.fmt.parseInt(u8, input, 0);
     try std.fmt.format(writer, "{b:0>8}", .{result});
-    return fbs.getWritten();
+    try writer.writeByte('\x00');
+    const ptr: *[8:0]u8 = fbs.getWritten()[0..8 :0];
+
+    // fbs.reset();
+    return ptr.*;
 }
 
 test "convertNumTypeToBinary should return proper results on proper input" {
@@ -92,4 +112,25 @@ test "convertNumTypeToBinary should return proper results on proper input" {
     var inputBinary = "0b10001".*;
     const resultBinary = try convertNumTypeToBinary(&inputBinary);
     try std.testing.expect(std.mem.eql(u8, expected, resultBinary));
+}
+
+fn convertConstToMutable(allocator: *std.mem.Allocator, constData: []const u8) ![]u8 {
+    var mutableData: []u8 = try allocator.alloc(u8, constData.len);
+    @memcpy(mutableData.ptr, constData);
+    return mutableData;
+}
+
+fn printBytes(title: []const u8, str: [8:0]u8) !void {
+    std.log.debug("{s}: |{s}|", .{ title, str });
+
+    var out_buf: [64]u8 = undefined;
+    var fbs = std.io.fixedBufferStream(&out_buf);
+    const writer = fbs.writer();
+
+    for (str) |byte| {
+        const byteValue: u8 = byte;
+        try std.fmt.format(writer, "|{x}|", .{byteValue});
+    }
+    std.log.debug("{s}", .{fbs.getWritten()});
+    std.log.debug("=====", .{});
 }
