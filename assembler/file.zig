@@ -111,13 +111,13 @@ test "convertNumTypeToBinary should return proper results on proper input" {
 
     var inputHex = "0x11".*;
     const result = try convertNumTypeToBinary(&inputHex);
-    try std.testing.expect(std.mem.eql(u8, expected, result));
+    try std.testing.expect(std.mem.eql(u8, expected, result[0..]));
 
     var inputDecimal = "17".*;
     const resultDecimal = try convertNumTypeToBinary(&inputDecimal);
-    try std.testing.expect(std.mem.eql(u8, expected, resultDecimal));
+    try std.testing.expect(std.mem.eql(u8, expected, resultDecimal[0..]));
 
     var inputBinary = "0b10001".*;
     const resultBinary = try convertNumTypeToBinary(&inputBinary);
-    try std.testing.expect(std.mem.eql(u8, expected, resultBinary));
+    try std.testing.expect(std.mem.eql(u8, expected, resultBinary[0..]));
 }
