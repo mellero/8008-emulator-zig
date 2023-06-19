@@ -14,54 +14,67 @@ pub fn readInputFile() !void {
 
     var buf: [1024]u8 = undefined;
     while (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
-        if (lineValue(line)) |value| {
-            if (value.op) |op| {
-                var opBin = try convertNumTypeToBinary(op);
+        if (split_line(line)) |splitLine| {
+            if (try split_line_to_binary(splitLine)) |binary_rep| {
+                // switch (binary_rep) {
+                //     BinInst.single => |value| std.log.debug("Single Bin: {s}", .{value.opCode}),
+                //     BinInst.double => |value| std.log.debug("Double Bin: {s} | {s}", .{ value.opCode, value.immVal }),
+                //     BinInst.triple => |_| std.log.debug("Triple Bin: {s}", .{"NA"}),
+                // }
 
-                if (value.imm.len > 0) {
-                    var immTrimmed = std.mem.trim(u8, value.imm, " ");
-                    if (immTrimmed.len > 0) {
-                        var immBin = try convertNumTypeToBinary(immTrimmed);
-                        var ptr: [:0]u8 = immBin[0.. :0];
-                        try logLineConversion(line, opBin, ptr);
-                    }
-                } else {
-                    const empty = "";
-                    const null_term: [:0]u8 = @constCast(empty ++ [_]u8{0});
-                    try logLineConversion(line, opBin, null_term);
-                }
+                try log_line_conversion(line, binary_rep);
             } else {
-                std.log.debug("Found bad opcode {s}", .{line});
+                std.log.debug("Bad input line {s}", .{line});
             }
         }
     }
 }
 
-fn logLineConversion(line: []u8, opBin: [8:0]u8, immBin: [:0]u8) !void {
-    var outputBuf: [1024]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&outputBuf);
-    var writer = fbs.writer();
-    try std.fmt.format(writer, "{s} => {s}", .{ line, opBin });
+const BinaryByte = [8:0]u8;
+const SingleInst = struct { opCode: BinaryByte };
+const DoubleInst = struct { opCode: BinaryByte, immVal: BinaryByte };
+const TripleInst = struct { opCode: BinaryByte, memLow: BinaryByte, memHigh: BinaryByte };
+const InstTag = enum { single, double, triple };
+const BinInst = union(InstTag) { single: SingleInst, double: DoubleInst, triple: TripleInst };
 
-    if (immBin.len > 1) {
-        try std.fmt.format(writer, " | {s}", .{immBin});
+fn split_line_to_binary(splitLine: SplitLine) !?BinInst {
+    const opCodeHex = opCodeToHexMap.get(splitLine.op) orelse return null;
+    const opBin = try convertNumTypeToBinary(opCodeHex);
+    const rest = std.mem.trim(u8, splitLine.rest, " ");
+    if (rest.len == 0) {
+        return BinInst{ .single = .{ .opCode = opBin } };
     }
-
-    std.log.debug("{s}", .{fbs.getWritten()});
+    // TODO: handle triple
+    const immBin = try convertNumTypeToBinary(rest);
+    return BinInst{ .double = .{ .opCode = opBin, .immVal = immBin } };
 }
 
-const Line = struct { op: ?*const [4:0]u8, imm: []const u8 };
-fn lineValue(line: []u8) ?Line {
+const SplitLine = struct { op: []u8, rest: []u8 };
+fn split_line(line: []u8) ?SplitLine {
     if (line.len >= 3) {
         const op = line[0..3];
-        const imm = line[3..line.len];
-        return .{ .op = map.get(op), .imm = imm };
+        const rest = line[3..line.len];
+        return .{ .op = op, .rest = rest };
     }
 
     return null;
 }
 
-const map = std.ComptimeStringMap(*const [4:0]u8, .{
+fn log_line_conversion(line: []u8, inst: BinInst) !void {
+    var outputBuf: [1024]u8 = undefined;
+    var fbs = std.io.fixedBufferStream(&outputBuf);
+    var writer = fbs.writer();
+
+    switch (inst) {
+        BinInst.single => |value| try std.fmt.format(writer, "{s} => {s}", .{ line, value.opCode }),
+        BinInst.double => |value| try std.fmt.format(writer, "{s} => {s} | {s}", .{ line, value.opCode, value.immVal }),
+        BinInst.triple => |_| try std.fmt.format(writer, "N/A", .{}),
+    }
+
+    std.log.debug("{s}", .{fbs.getWritten()});
+}
+
+const opCodeToHexMap = std.ComptimeStringMap(*const [4:0]u8, .{
     .{ "ADI", "0x04" },
     .{ "LAI", "0x06" },
     .{ "ADA", "0x80" },
@@ -80,10 +93,6 @@ const map = std.ComptimeStringMap(*const [4:0]u8, .{
     .{ "LBL", "0xCE" },
 });
 
-const NumType = enum { decimal, hex, binary };
-
-const RadixError = error{InvalidNumType};
-
 fn convertNumTypeToBinary(input: []const u8) ![8:0]u8 {
     var outputBuf: [9]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&outputBuf);
@@ -94,7 +103,6 @@ fn convertNumTypeToBinary(input: []const u8) ![8:0]u8 {
     try writer.writeByte('\x00');
     const ptr: *[8:0]u8 = fbs.getWritten()[0..8 :0];
 
-    // fbs.reset();
     return ptr.*;
 }
 
@@ -112,25 +120,4 @@ test "convertNumTypeToBinary should return proper results on proper input" {
     var inputBinary = "0b10001".*;
     const resultBinary = try convertNumTypeToBinary(&inputBinary);
     try std.testing.expect(std.mem.eql(u8, expected, resultBinary));
-}
-
-fn convertConstToMutable(allocator: *std.mem.Allocator, constData: []const u8) ![]u8 {
-    var mutableData: []u8 = try allocator.alloc(u8, constData.len);
-    @memcpy(mutableData.ptr, constData);
-    return mutableData;
-}
-
-fn printBytes(title: []const u8, str: [8:0]u8) !void {
-    std.log.debug("{s}: |{s}|", .{ title, str });
-
-    var out_buf: [64]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&out_buf);
-    const writer = fbs.writer();
-
-    for (str) |byte| {
-        const byteValue: u8 = byte;
-        try std.fmt.format(writer, "|{x}|", .{byteValue});
-    }
-    std.log.debug("{s}", .{fbs.getWritten()});
-    std.log.debug("=====", .{});
 }
