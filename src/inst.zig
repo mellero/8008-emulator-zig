@@ -49,10 +49,10 @@ fn setFlags(flags: *cpu.FLAGS, bitsToSet: u8) void {
 }
 
 fn calculateFlags(flags: *cpu.FLAGS, bitsToCalc: u8, reg: *u8) void {
-    var cFlag: i32 = 0;
-    var zFlag: i32 = 0;
-    var sFlag: i32 = 0;
-    var pFlag: i32 = 0;
+    const cFlag: i32 = 0;
+    const zFlag: i32 = 0;
+    const sFlag: i32 = 0;
+    const pFlag: i32 = 0;
 
     if (bitsToCalc & constants.FLAG_BIT_C) {}
     if (bitsToCalc & constants.FLAG_BIT_P) zFlag = (reg.* == 0) & constants.FLAG_BIT_Z;

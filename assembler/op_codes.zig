@@ -1,5 +1,15 @@
 const std = @import("std");
 
+// const data = blk: {
+//         @setEvalBranchQuota(1000); // Optional: increase evaluation quota if needed
+//         break @compileTime [3]struct { []const u8, u32 }{
+//             .{ "apple", 10 },
+//             .{ "banana", 20 },
+//             .{ "cherry", 30 },
+//         };
+//     };
+
+
 ///
 /// Register Addresses:
 /// 000 A
@@ -10,7 +20,7 @@ const std = @import("std");
 /// 101 H
 /// 110 L
 ///
-pub const op_code_to_hex_map = std.ComptimeStringMap(*const [4:0]u8, .{
+pub const op_code_to_hex_map = std.StaticStringMap(*const [4:0]u8).initComptime(.{
     .{ "HLT", "0x00" },
     //  HLT    0x01
     .{ "RLC", "0x02" },

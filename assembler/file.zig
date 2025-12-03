@@ -17,24 +17,39 @@ pub fn readInputFile() !void {
     const output_file = try std.fs.cwd().createFile(output_file_name, .{});
     defer output_file.close();
 
-    var buf_reader = std.io.bufferedReader(input_file.reader());
-    var in_stream = buf_reader.reader();
-
     var buf: [1024]u8 = undefined;
-    while (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
-        if (splitLine(line)) |split_line| {
-            if (split_line.len == 0) {
-                // blank line
-                continue;
+    var out_writer = output_file.writer(&buf);
+    const writer = &out_writer.interface;
+
+    var in_buf: [1024]u8 = undefined;
+    var in_f_reader = std.fs.File.Reader.init(input_file, &in_buf);
+    var in_reader = &in_f_reader.interface;
+
+    while (in_reader.takeDelimiter('\n')) |maybe_line| {
+        if (maybe_line) |line| {
+            if (splitLine(line)) |split_line| {
+                if (split_line.len == 0) {
+                    // blank line
+                    continue;
+                }
+                if (try lineToBinary(split_line)) |binary_rep| {
+                    try writeToOutput(writer, binary_rep);
+                    try logLineToBinary(line, binary_rep);
+                } else {
+                    std.log.debug(">> Bad input line {s}", .{line});
+                }
             }
-            if (try lineToBinary(split_line)) |binary_rep| {
-                try writeToOutput(output_file, binary_rep);
-                try logLineToBinary(line, binary_rep);
-            } else {
-                std.log.debug(">> Bad input line {s}", .{line});
-            }
+        } else {
+            // EOF
+            break;
         }
+
+    } else |err| switch(err) {
+        error.ReadFailed,
+        error.StreamTooLong,
+        => |e| return e,
     }
+    std.log.debug("Done converting input", .{});
 }
 
 const BinaryByte = [8:0]u8;
@@ -51,13 +66,13 @@ fn lineToBinary(split_line: [][]u8) !?BinInst {
     switch (split_line.len) {
         1 => return BinInst{ .single = .{ .opCode = op_bin } },
         2 => {
-            var imm = split_line[1];
+            const imm = split_line[1];
             const imm_bin = try convertToBin(imm);
             return BinInst{ .double = .{ .opCode = op_bin, .immVal = imm_bin } };
         },
         3 => {
-            var low = split_line[1];
-            var high = split_line[2];
+            const low = split_line[1];
+            const high = split_line[2];
             const low_bits = try convertToBin(low);
             const high_bits = try convertToBin(high);
             return BinInst{ .triple = .{ .opCode = op_bin, .memLow = low_bits, .memHigh = high_bits } };
@@ -78,7 +93,7 @@ fn splitLine(line: []u8) ?[][]u8 {
             return null;
         }
 
-        var trimmed = std.mem.trim(u8, split_val, " ");
+        const trimmed = std.mem.trim(u8, split_val, " ");
 
         if (trimmed.len > 0) {
             arr[i] = @constCast(trimmed);
@@ -104,6 +119,7 @@ test "splitLine should return null on empty string" {
     try std.testing.expect(many_space_result == null);
 }
 
+
 test "splitLine should return proper split on valid string" {
     // Not a great test, just to keep API honest for now
     const input = "ABA 123123"[0..];
@@ -115,19 +131,19 @@ test "splitLine should return proper split on valid string" {
     }
 }
 
-fn writeToOutput(file: File, inst: BinInst) !void {
-    const writer = file.writer();
-    switch (inst) {
-        BinInst.single => |value| try std.fmt.format(writer, "|{s}|", .{value.opCode}),
-        BinInst.double => |value| try std.fmt.format(writer, "|{s} {s}|", .{ value.opCode, value.immVal }),
-        BinInst.triple => |value| try std.fmt.format(writer, "|{s} {s} {s}|", .{ value.opCode, value.memLow, value.memHigh }),
-    }
+fn writeToOutput(writer: *std.io.Writer, inst: BinInst) !void {
+    _ = switch (inst) {
+        BinInst.single => |value| try writer.print("|{s}|", .{value.opCode}),
+        BinInst.double => |value| try writer.print("|{s} {s}|", .{ value.opCode, value.immVal }),
+        BinInst.triple => |value| try writer.print("|{s} {s} {s}|", .{ value.opCode, value.memLow, value.memHigh }),
+    };
+    try writer.flush();
 }
 
 fn logLineToBinary(line: []u8, inst: BinInst) !void {
     var output_buf: [1024]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&output_buf);
-    var writer = fbs.writer();
+    const writer = fbs.writer();
 
     switch (inst) {
         BinInst.single => |value| try std.fmt.format(writer, "{s} => {s}", .{ line, value.opCode }),
