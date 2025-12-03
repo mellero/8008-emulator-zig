@@ -31,6 +31,7 @@ pub fn main() !void {
     _ = insts.OpCodeFunc;
 
     print_struct(c);
+    print_struct(states);
 
     try @import("assembler").readInputFile();
 }

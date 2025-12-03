@@ -133,9 +133,9 @@ test "splitLine should return proper split on valid string" {
 
 fn writeToOutput(writer: *std.io.Writer, inst: BinInst) !void {
     _ = switch (inst) {
-        BinInst.single => |value| try writer.print("|{s}|", .{value.opCode}),
-        BinInst.double => |value| try writer.print("|{s} {s}|", .{ value.opCode, value.immVal }),
-        BinInst.triple => |value| try writer.print("|{s} {s} {s}|", .{ value.opCode, value.memLow, value.memHigh }),
+        BinInst.single => |value| try writer.print("{s}", .{value.opCode}),
+        BinInst.double => |value| try writer.print("{s}{s}", .{ value.opCode, value.immVal }),
+        BinInst.triple => |value| try writer.print("{s}{s}{s}", .{ value.opCode, value.memLow, value.memHigh }),
     };
     try writer.flush();
 }

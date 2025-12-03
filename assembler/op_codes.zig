@@ -1,15 +1,5 @@
 const std = @import("std");
 
-// const data = blk: {
-//         @setEvalBranchQuota(1000); // Optional: increase evaluation quota if needed
-//         break @compileTime [3]struct { []const u8, u32 }{
-//             .{ "apple", 10 },
-//             .{ "banana", 20 },
-//             .{ "cherry", 30 },
-//         };
-//     };
-
-
 ///
 /// Register Addresses:
 /// 000 A
