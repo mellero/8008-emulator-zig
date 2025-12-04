@@ -175,14 +175,14 @@ pub const CPU = struct {
 
     pub fn getReg(cpu: *CPU, r: u3) *u8 {
         return switch (r) {
-            0 => &cpu.reg.A,
-            1 => &cpu.reg.B,
-            2 => &cpu.reg.C,
-            3 => &cpu.reg.D,
-            4 => &cpu.reg.E,
-            5 => &cpu.reg.H,
-            6 => &cpu.reg.L,
-            7 => &cpu.reg.A // TODO: not possible
+            0b000 => &cpu.reg.A,
+            0b001 => &cpu.reg.B,
+            0b010 => &cpu.reg.C,
+            0b011 => &cpu.reg.D,
+            0b100 => &cpu.reg.E,
+            0b101 => &cpu.reg.H,
+            0b110 => &cpu.reg.L,
+            0b111 => &cpu.reg.A // TODO: not possible
         };
     }
 };

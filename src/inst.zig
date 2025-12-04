@@ -220,8 +220,20 @@ fn LRR(c: *cpu.CPU) u8 {
     return 0;
 }
 
+test "LRR load A (000) from B (001)" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 11 DDD SSS
+    c.inst = @intCast(0b11000001);
+
+    const expected: u8 = 15;
+    c.reg.B = expected;
+    _ = LRR(&c);
+    try std.testing.expectEqual(expected, c.reg.A);
+}
+
 ///
 /// Load Register R with value from M (HL)
+/// 11 DDD 111
 ///
 fn LRM(c: *cpu.CPU) u8 {
     const mask: u8 = 0b00000111;
@@ -238,8 +250,29 @@ fn LRM(c: *cpu.CPU) u8 {
     return 0;
 }
 
+test "LRM load B (001) from M (H + L)" {
+    mem.CLEAR_MEM();
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 11 DDD 111
+    c.inst = @intCast(0b11001111);
+
+    const expected_val: u8 = 15;
+    const low: u8 = 0b00001111;
+    const high: u8 = 0b00110000;
+    const full_addr: u16 = 0b00110000_00001111;
+    c.reg.L = low;
+    c.reg.H = high;
+    const m: u16 = full_addr;
+
+    mem.RAM[m] = expected_val;
+
+    _ = LRM(&c);
+    try std.testing.expectEqual(expected_val, c.reg.B);
+}
+
 ///
 /// Load memory register M with context of index register r
+/// 11 111 SSS
 ///
 fn LMR(c: *cpu.CPU) u8 {
     const mask: u8 = 0b00000111;
@@ -255,8 +288,29 @@ fn LMR(c: *cpu.CPU) u8 {
     return 0;
 }
 
+test "LMR load M (H + L) from C (010)" {
+    mem.CLEAR_MEM();
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 11 111 SSS
+    c.inst = @intCast(0b11111010);
+
+    const expected_val: u8 = 15;
+    c.reg.C = expected_val;
+    
+    const low: u8 = 0b00001111;
+    const high: u8 = 0b00110000;
+    const full_addr: u16 = 0b00110000_00001111;
+    c.reg.L = low;
+    c.reg.H = high;
+    const m: u16 = full_addr;
+
+    _ = LMR(&c);
+    try std.testing.expectEqual(expected_val, mem.RAM[m]);
+}
+
 ///
 /// Load source register with immediate value (next byte)
+/// 00 DDD 110
 ///
 fn LRI(c: *cpu.CPU) u8 {
     // Container variable to hold register value over multiple calls
@@ -285,8 +339,22 @@ fn LRI(c: *cpu.CPU) u8 {
     }
 }
 
+test "LRI load L (110) with immediate value" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 00 DDD 110
+    c.inst = @intCast(0b00110110);
+    _ = LRI(&c);
+
+    const expected_imm: u8 = 0b00111001;
+    c.inst = @intCast(expected_imm);
+    _ = LRI(&c);
+
+    try std.testing.expectEqual(expected_imm, c.reg.L);
+}
+
 ///
 /// Load memory register M with immediate value (next byte)
+/// 00 111 110
 ///
 fn LMI(c: *cpu.CPU) u8 {
     // Container variable to hold register value over multiple calls
@@ -313,8 +381,30 @@ fn LMI(c: *cpu.CPU) u8 {
     }
 }
 
+test "LMI load M (H + L) with immediate value" {
+    mem.CLEAR_MEM();
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 00 111 110
+    c.inst = @intCast(0b00111110);
+
+    const low: u8 = 0b00001110;
+    const high: u8 = 0b00110001;
+    const full_addr: u16 = 0b00110001_00001110;
+    c.reg.L = low;
+    c.reg.H = high;
+    const m: u16 = full_addr;
+    _ = LMI(&c);
+
+    const expected_imm: u8 = 0b00111001;
+    c.inst = @intCast(expected_imm);
+    _ = LMI(&c);
+
+    try std.testing.expectEqual(expected_imm, mem.RAM[m]);
+}
+
 ///
-/// Increment content of index register R
+/// Increment content of index register R (R != A)
+/// 00 DDD 000
 ///
 fn INR(c: *cpu.CPU) u8 {
     const mask: u8 = 0b00000111;
@@ -331,8 +421,22 @@ fn INR(c: *cpu.CPU) u8 {
     return 0;
 }
 
+test "INR increments register D (011)" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 00 DDD 000
+    c.inst = @intCast(0b00011000);
+
+    const initial: u8 = 15;
+    const expected: u8 = initial + 1;
+    c.reg.D = initial;
+    _ = INR(&c);
+
+    try std.testing.expectEqual(expected, c.reg.D);
+}
+
 ///
-/// Decrement content of index register R
+/// Decrement content of index register R (R != A)
+/// 00 DDD 001
 ///
 fn DCR(c: *cpu.CPU) u8 {
     const mask: u8 = 0b00000111;
@@ -348,3 +452,26 @@ fn DCR(c: *cpu.CPU) u8 {
 
     return 0;
 }
+
+test "DCR decrements register E (100)" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 00 DDD 000
+    c.inst = @intCast(0b00100001);
+
+    const initial: u8 = 15;
+    const expected: u8 = initial - 1;
+    c.reg.E = initial;
+    _ = DCR(&c);
+
+    try std.testing.expectEqual(expected, c.reg.E);
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// *                                                   Accumulator Group Insts.                                                      *
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// *                                            Program Counter and Stack Control Inst                                               *
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+

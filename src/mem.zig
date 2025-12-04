@@ -55,6 +55,10 @@ pub fn WRITE_MEM(adrs: u16, value: u8) void {
     RAM[adrs] = value;
 }
 
+pub fn CLEAR_MEM() void {
+    RAM = std.mem.zeroes([MAX_MEM]u8);
+}
+
 fn binStrToInt(str: *const [8]u8) u8 {
     const byteInt = std.fmt.parseInt(u8, str, 2) catch |err| {
         switch (err) {
