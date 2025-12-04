@@ -5,27 +5,27 @@ const constants = @import("const.zig");
 const insts = @import("inst.zig");
 
 pub fn main() !void {
+    try @import("assembler").readInputFile();
+    
     // Program
-    var opCyclesRemaining: u8 = 0;
     var states: cpu.STATES = .{
         .S0 = 0,
         .S1 = 0,
         .S2 = 0,
     };
-    mem.LOAD_MEM();
+    try mem.LOAD_MEM();
 
     var c: cpu.CPU = cpu.initCPU();
     setFlags(&c.flags, constants.FLAG_BITS_NONE);
     setStates(&states, constants.T1);
 
-    var testSz: i32 = 2;
-    while (testSz > 0) {
+    var opCyclesRemaining: u8 = 1;
+    while (opCyclesRemaining > 0) {
         c.fetch();
         opCyclesRemaining = c.decode();
         while (opCyclesRemaining > 0) {
             opCyclesRemaining = c.execute();
         }
-        testSz -= 1;
     }
 
     _ = insts.OpCodeFunc;
@@ -33,7 +33,6 @@ pub fn main() !void {
     print_struct(c);
     print_struct(states);
 
-    try @import("assembler").readInputFile();
 }
 
 fn setStates(states: *cpu.STATES, currentState: u8) void {

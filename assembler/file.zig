@@ -9,6 +9,7 @@ const op_codes_to_hex_map = @import("op_codes.zig").op_code_to_hex_map;
 /// Output binary
 ///
 pub fn readInputFile() !void {
+    std.log.debug("============ Running Assembler ===========", .{});
     const input_file_name = "assembler/program.txt";
     const input_file = try std.fs.cwd().openFile(input_file_name, .{});
     defer input_file.close();
@@ -49,7 +50,7 @@ pub fn readInputFile() !void {
         error.StreamTooLong,
         => |e| return e,
     }
-    std.log.debug("Done converting input", .{});
+    std.log.debug("======= Finished Running Assembler ======", .{});
 }
 
 const BinaryByte = [8:0]u8;

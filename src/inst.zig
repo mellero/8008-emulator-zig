@@ -8,6 +8,42 @@ pub const OpCodeFunc = ?fn (*cpu.CPU) u8;
 
 // zig fmt: off
 pub const opCodes = [_]OpCodeFunc{
+    //        x0   x1    x2     x3    x4    x5    x6    x7    x8    x9    xA    xB    xC    xD    xE    xF
+    // 0x  
+             HLT,  HLT,  NOOP,  null, NOOP,  null, LRI,  null, INR,  DCR,  NOOP,  null, NOOP, null,  LRI,  null,
+//     // 1x  
+             INR,  DCR,  NOOP,  null, NOOP,  null, LRI,  null, INR,  DCR,  NOOP,  null, NOOP, null,  LRI,  null,
+//     // 2x  
+             INR,  DCR,  null, null, NOOP,  null, LRI,  null, INR,  DCR,  null, null, NOOP, null,  LRI,  null,
+//     // 3x  
+             INR,  DCR,  null, null, NOOP,  null, LRI,  null, null, null, null, null, NOOP, null, LMI,  null,
+//     // 4x  
+             null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+//     // 5x  
+             null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+//     // 6x  
+             null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+//     // 7x  
+             null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+//     // 8x  
+             NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,
+//     // 9x  
+             NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,
+//     // Ax  
+             NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,
+//     // Bx  
+             NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,
+    // Cx  
+             null, LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,
+    // Dx  
+             LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,
+    // Ex  
+             LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,
+    // Fx  
+             LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,  LMR,  LMR,  LMR,  LMR,  LMR,  LMR,  LMR,  HLT
+};
+
+// pub const opCodes = [_]OpCodeFunc{
     //        x0   x1    x2    x3    x4    x5    x6    x7    x8    x9    xA    xB    xC    xD    xE    xF
     // 0x  
 //              HLT,  HLT,  RLC,  NULL, ADI,  NULL, LRI,  NULL, INR,  DCR,  RRC,  NULL, ACI, NULL,  LRI,  NULL,
@@ -33,15 +69,15 @@ pub const opCodes = [_]OpCodeFunc{
 //              NDR,  NDR,  NDR,  NDR,  NDR,  NDR,  NDR,  NDM,  XRR,  XRR,  XRR,  XRR,  XRR,  XRR,  XRR,  XRM,
 //     // Bx  
 //              ORR,  ORR,  ORR,  ORR,  ORR,  ORR,  ORR,  ORM,  CPR,  CPR,  CPR,  CPR,  CPR,  CPR,  CPR,  CPM,
-    // Cx  
-             null, LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,
-    // Dx  
-             LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,
-    // Ex  
-             LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,
-    // Fx  
-             LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,  LMR,  LMR,  LMR,  LMR,  LMR,  LMR,  LMR,  HLT
-};
+//     // Cx  
+//              null, LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,
+//     // Dx  
+//              LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,
+//     // Ex  
+//              LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,
+//     // Fx  
+//              LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRR,  LRM,  LMR,  LMR,  LMR,  LMR,  LMR,  LMR,  LMR,  HLT
+// };
 // zig fmt: on
 
 // zig fmt: off
@@ -75,31 +111,92 @@ const parityTable =  [_]u8{
 ///
 fn setFlags(flags: *cpu.FLAGS, bitsToSet: u8) void {
     // Shift bits right, by correct number based on bit position, then check if bit set
-    flags.C = bitsToSet & constants.FLAG_BIT_C;
-    flags.P = bitsToSet & constants.FLAG_BIT_P;
-    flags.Z = bitsToSet & constants.FLAG_BIT_Z;
-    flags.S = bitsToSet & constants.FLAG_BIT_S;
+    flags.C = @intFromBool((bitsToSet & constants.FLAG_BIT_C) != 0);
+    flags.P = @intFromBool((bitsToSet & constants.FLAG_BIT_P) != 0);
+    flags.Z = @intFromBool((bitsToSet & constants.FLAG_BIT_Z) != 0);
+    flags.S = @intFromBool((bitsToSet & constants.FLAG_BIT_S) != 0);
 
     std.debug.print("FLAGS:\n", .{});
     std.debug.print("C: {d}, P: {d}, Z: {d}, S: {d}\n", .{ flags.C, flags.P, flags.Z, flags.S });
 }
 
-fn calculateFlags(flags: *cpu.FLAGS, bitsToCalc: u8, reg: *u8) void {
-    const cFlag: i32 = 0;
-    const zFlag: i32 = 0;
-    const sFlag: i32 = 0;
-    const pFlag: i32 = 0;
+fn testHelperFlagCPUInit() cpu.CPU {
+    var c: cpu.CPU = cpu.initCPU();
+    setFlags(&c.flags, constants.FLAG_BITS_NONE);
+    return c;
+}
 
-    if (bitsToCalc & constants.FLAG_BIT_C) {}
-    if (bitsToCalc & constants.FLAG_BIT_P) zFlag = (reg.* == 0) & constants.FLAG_BIT_Z;
-    if (bitsToCalc & constants.FLAG_BIT_Z) sFlag = (reg.* & 0b10000000) & constants.FLAG_BIT_S;
-    if (bitsToCalc & constants.FLAG_BIT_S) pFlag = parityTable[reg.*] & constants.FLAG_BIT_P;
+test "Set flags sets correctly on NONE" {
+    const c: cpu.CPU =  testHelperFlagCPUInit();
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.C);
+    try std.testing.expectEqual(0, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.Z);
+}
+
+test "Set flags sets correctly on ALL" {
+    var c: cpu.CPU =  testHelperFlagCPUInit();
+    setFlags(&c.flags, constants.FLAG_BITS_ALL);
+    try std.testing.expectEqual(1, c.flags.S);
+    try std.testing.expectEqual(1, c.flags.C);
+    try std.testing.expectEqual(1, c.flags.P);
+    try std.testing.expectEqual(1, c.flags.Z);
+}
+
+test "Set flags sets flags properly" {
+    var c: cpu.CPU =  testHelperFlagCPUInit();
+    var flag_to_set: u8 = 0;
+    const one: u8 = 1;
+    for (0..4) |f| {
+        flag_to_set = one << @intCast(f);
+
+        setFlags(&c.flags, (flag_to_set));
+        try std.testing.expectEqual(if (f == 0) @as(u1, 1) else 0, c.flags.C);
+        try std.testing.expectEqual(if (f == 1) @as(u1, 1) else 0, c.flags.P);
+        try std.testing.expectEqual(if (f == 2) @as(u1, 1) else 0, c.flags.Z);
+        try std.testing.expectEqual(if (f == 3) @as(u1, 1) else 0, c.flags.S);
+    }
+
+    for (0..4) |_| {
+        flag_to_set = 0;
+
+        setFlags(&c.flags, (flag_to_set));
+        try std.testing.expectEqual(0, c.flags.C);
+        try std.testing.expectEqual(0, c.flags.P);
+        try std.testing.expectEqual(0, c.flags.Z);
+        try std.testing.expectEqual(0, c.flags.S);
+    }
+}
+
+
+fn calculateFlags(flags: *cpu.FLAGS, bitsToCalc: u8, reg: *u8) void {
+    const cFlag: u8 = 0;
+    var zFlag: u8 = 0;
+    var sFlag: u8 = 0;
+    var pFlag: u8 = 0;
+
+    if (bitsToCalc & constants.FLAG_BIT_C > 0) {}
+    if (bitsToCalc & constants.FLAG_BIT_P > 0) {
+        const emptyRegVal: u8 = if (reg.* == 0) 1 else 0;
+        zFlag = emptyRegVal & constants.FLAG_BIT_Z;
+    }
+    if (bitsToCalc & constants.FLAG_BIT_Z > 0) {
+        sFlag = (reg.* & 0b10000000) & constants.FLAG_BIT_S;
+    }
+    if (bitsToCalc & constants.FLAG_BIT_S > 0) {
+        pFlag = parityTable[reg.*] & constants.FLAG_BIT_P;
+    }
 
     setFlags(flags, (cFlag | pFlag | zFlag | sFlag));
 }
 
 fn HLT(c: *cpu.CPU) u8 {
     _ = c;
+    return 0;
+}
+
+fn NOOP(c: *cpu.CPU) u8 {
+    std.log.debug("No op for inst {b}", .{c.inst});
     return 0;
 }
 
@@ -116,9 +213,8 @@ fn LRR(c: *cpu.CPU) u8 {
     const src: u3 = @intCast(c.inst & mask);
     const dest: u3 = @intCast((c.inst >> 3) & mask);
 
-    const srcR: *u8 = c.get_reg(src);
-    // const srcR: *const u8 = GET_REG(c, src);
-    const destR: *u8 = c.get_reg(dest);
+    const srcR: *u8 = c.getReg(src);
+    const destR: *u8 = c.getReg(dest);
 
     destR.* = srcR.*;
     return 0;
@@ -131,8 +227,11 @@ fn LRM(c: *cpu.CPU) u8 {
     const mask: u8 = 0b00000111;
     const dest: u3 = @intCast((c.inst >> 3) & mask);
 
-    const destR: *u8 = c.get_reg(dest);
-    const m: u16 = (c.reg.H << 8) | (c.reg.L);
+    const destR: *u8 = c.getReg(dest);
+
+    const h16: u16 = @intCast(c.reg.H);
+    const l16: u16 = @intCast(c.reg.L);
+    const m: u16 = (h16 << 8) | (l16);
 
     destR.* = mem.READ_MEM(m);
 
@@ -146,10 +245,12 @@ fn LMR(c: *cpu.CPU) u8 {
     const mask: u8 = 0b00000111;
     const src: u3 = @intCast(c.inst & mask);
 
-    const srcR: *u8 = c.get_reg(src);
-    const m: u16 = (c.reg.H << 8) | (c.reg.L);
+    const srcR: *u8 = c.getReg(src);
+    const h16: u16 = @intCast(c.reg.H);
+    const l16: u16 = @intCast(c.reg.L);
+    const m: u16 = (h16 << 8) | (l16);
 
-    mem.WRITE_MEM(m, srcR);
+    mem.WRITE_MEM(m, srcR.*);
 
     return 0;
 }
@@ -160,11 +261,11 @@ fn LMR(c: *cpu.CPU) u8 {
 fn LRI(c: *cpu.CPU) u8 {
     // Container variable to hold register value over multiple calls
     const cont = struct {
-        var destR: *u8 = null;
+        var destR: ?*u8 = null;
     };
 
     if (cont.destR) |destR| {
-        const imm: u8 = cpu.inst;
+        const imm: u8 = c.inst;
         destR.* = imm;
         // LOG?
 
@@ -177,7 +278,7 @@ fn LRI(c: *cpu.CPU) u8 {
         const mask: u8 = 0b00000111;
         const dest: u3 = @intCast((c.inst >> 3) & mask);
 
-        cont.destR = c.get_reg(dest);
+        cont.destR = c.getReg(dest);
 
         // LOG?
         return 1;
@@ -190,20 +291,22 @@ fn LRI(c: *cpu.CPU) u8 {
 fn LMI(c: *cpu.CPU) u8 {
     // Container variable to hold register value over multiple calls
     const cont = struct {
-        var destM: *u16 = null;
+        var destM: ?*u16 = null;
     };
 
     if (cont.destM) |destM| {
-        const imm: u8 = cpu.inst;
-        mem.WRITE_MEM(*destM, imm);
+        const imm: u8 = c.inst;
+        mem.WRITE_MEM(destM.*, imm);
 
         // reset container for next use
-        cont.destR = null;
+        cont.destM = null;
 
         return 0;
     } else {
         // No register set yet
-        var m: u16 = (c.reg.H << 8) | (c.reg.L);
+        const h16: u16 = @intCast(c.reg.H);
+        const l16: u16 = @intCast(c.reg.L);
+        var m: u16 = (h16 << 8) | (l16);
         cont.destM = &m;
 
         return 1;
@@ -216,9 +319,9 @@ fn LMI(c: *cpu.CPU) u8 {
 fn INR(c: *cpu.CPU) u8 {
     const mask: u8 = 0b00000111;
     const dest: u3 = @intCast((c.inst >> 3) & mask);
-    const reg: *u8 = c.get_reg(dest);
-    if (reg == constants.IDX_A) {
-        return -1;
+    const reg: *u8 = c.getReg(dest);
+    if (reg.* == constants.IDX_A) {
+        return 0;
     }
 
     reg.* += 1;
@@ -234,9 +337,9 @@ fn INR(c: *cpu.CPU) u8 {
 fn DCR(c: *cpu.CPU) u8 {
     const mask: u8 = 0b00000111;
     const dest: u3 = @intCast((c.inst >> 3) & mask);
-    const reg: *u8 = c.get_reg(dest);
-    if (reg == constants.IDX_A) {
-        return -1;
+    const reg: *u8 = c.getReg(dest);
+    if (reg.* == constants.IDX_A) {
+        return 0;
     }
 
     reg.* -= 1;

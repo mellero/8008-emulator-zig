@@ -145,15 +145,21 @@ pub const CPU = struct {
 
     pub fn fetch(cpu: *CPU) void {
         // check states?
+        std.log.debug("Fetching at PC: {}", .{cpu.stack.PC});
         cpu.inst = mem.RAM[cpu.stack.PC];
         std.log.debug("Fetched inst: {}", .{cpu.inst});
     }
 
     pub fn decode(cpu: *CPU) u8 {
-        if (insts.opCodes[4]) |inst| {
-            return inst(cpu);
-        } else {
-            return 0;
+        switch (cpu.inst) {
+            inline 0...insts.opCodes.len - 1 => |i| {
+                if (insts.opCodes[i]) |inst| {
+                    fetch(cpu);
+                    return inst(cpu);
+                } else {
+                    return 0;
+                }
+            },
         }
     }
 
@@ -167,7 +173,7 @@ pub const CPU = struct {
         }
     }
 
-    pub fn get_reg(cpu: *CPU, r: u3) *u8 {
+    pub fn getReg(cpu: *CPU, r: u3) *u8 {
         return switch (r) {
             0 => &cpu.reg.A,
             1 => &cpu.reg.B,
