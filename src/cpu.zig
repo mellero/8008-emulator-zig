@@ -52,9 +52,12 @@
 /// *      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 /// *
 /// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+const std = @import("std");
+
 const HALT = @import("const.zig").HALT;
 const mem = @import("mem.zig");
 const insts = @import("inst.zig");
+
 
 pub const STATES = struct {
     S0: u1,
@@ -102,6 +105,7 @@ const REG = struct {
     E: u8,
     H: u8,
     L: u8,
+
 };
 
 /// Condition Flip Flops
@@ -142,21 +146,38 @@ pub const CPU = struct {
     pub fn fetch(cpu: *CPU) void {
         // check states?
         cpu.inst = mem.RAM[cpu.stack.PC];
+        std.log.debug("Fetched inst: {}", .{cpu.inst});
     }
 
     pub fn decode(cpu: *CPU) u8 {
-        _ = cpu;
-        // return insts.opCodes[4](cpu);
-        return 0;
+        if (insts.opCodes[4]) |inst| {
+            return inst(cpu);
+        } else {
+            return 0;
+        }
     }
 
     pub fn execute(cpu: *CPU) u8 {
-        _ = cpu;
-        // const inst: mem.OpCodeFunc = insts.opCodes[4];
-        // cpu.stack.PC += 1;
-        // fetch(cpu);
-        // return inst(cpu);
-        return 0;
+        cpu.stack.PC += 1;
+        if (insts.opCodes[4]) |inst| {
+            fetch(cpu);
+            return inst(cpu);
+        } else {
+            return 0;
+        }
+    }
+
+    pub fn get_reg(cpu: *CPU, r: u3) *u8 {
+        return switch (r) {
+            0 => &cpu.reg.A,
+            1 => &cpu.reg.B,
+            2 => &cpu.reg.C,
+            3 => &cpu.reg.D,
+            4 => &cpu.reg.E,
+            5 => &cpu.reg.H,
+            6 => &cpu.reg.L,
+            7 => &cpu.reg.A // TODO: not possible
+        };
     }
 };
 
