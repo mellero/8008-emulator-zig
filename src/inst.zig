@@ -82,14 +82,6 @@ pub const opCodes = [_]OpCodeFunc{
 
 // zig fmt: off
 const parityTable =  [_]u8{
-    0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0,
-    0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1,
-    0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1,
-    0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0,
-    0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1,
-    0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0,
-    0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0,
-    0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1,
     0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1,
     0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0,
     0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0,
@@ -97,7 +89,15 @@ const parityTable =  [_]u8{
     0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0,
     0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1,
     0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1,
-    0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0
+    0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0,
+    0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0,
+    0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1,
+    0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1,
+    0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0,
+    0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1,
+    0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0,
+    0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0,
+    0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x1
 };
 // zig fmt: on
 
@@ -110,14 +110,12 @@ const parityTable =  [_]u8{
 /// C P Z S
 ///
 fn setFlags(flags: *cpu.FLAGS, bitsToSet: u8) void {
-    // Shift bits right, by correct number based on bit position, then check if bit set
     flags.C = @intFromBool((bitsToSet & constants.FLAG_BIT_C) != 0);
     flags.P = @intFromBool((bitsToSet & constants.FLAG_BIT_P) != 0);
     flags.Z = @intFromBool((bitsToSet & constants.FLAG_BIT_Z) != 0);
     flags.S = @intFromBool((bitsToSet & constants.FLAG_BIT_S) != 0);
 
-    std.debug.print("FLAGS:\n", .{});
-    std.debug.print("C: {d}, P: {d}, Z: {d}, S: {d}\n", .{ flags.C, flags.P, flags.Z, flags.S });
+    // std.debug.print("C: {d}, P: {d}, Z: {d}, S: {d}\n", .{ flags.C, flags.P, flags.Z, flags.S });
 }
 
 fn testHelperFlagCPUInit() cpu.CPU {
@@ -126,12 +124,16 @@ fn testHelperFlagCPUInit() cpu.CPU {
     return c;
 }
 
-test "Set flags sets correctly on NONE" {
-    const c: cpu.CPU =  testHelperFlagCPUInit();
-    try std.testing.expectEqual(0, c.flags.S);
+fn testHelperAllFlagsEmpty(c: *const cpu.CPU) !void {
     try std.testing.expectEqual(0, c.flags.C);
     try std.testing.expectEqual(0, c.flags.P);
     try std.testing.expectEqual(0, c.flags.Z);
+    try std.testing.expectEqual(0, c.flags.S);
+}
+
+test "Set flags sets correctly on NONE" {
+    const c: cpu.CPU =  testHelperFlagCPUInit();
+    try testHelperAllFlagsEmpty(&c);
 }
 
 test "Set flags sets correctly on ALL" {
@@ -161,30 +163,26 @@ test "Set flags sets flags properly" {
         flag_to_set = 0;
 
         setFlags(&c.flags, (flag_to_set));
-        try std.testing.expectEqual(0, c.flags.C);
-        try std.testing.expectEqual(0, c.flags.P);
-        try std.testing.expectEqual(0, c.flags.Z);
-        try std.testing.expectEqual(0, c.flags.S);
+        try testHelperAllFlagsEmpty(&c);
     }
 }
 
 
 fn calculateFlags(flags: *cpu.FLAGS, bitsToCalc: u8, reg: *u8) void {
     const cFlag: u8 = 0;
+    var pFlag: u8 = 0;
     var zFlag: u8 = 0;
     var sFlag: u8 = 0;
-    var pFlag: u8 = 0;
-
+    
     if (bitsToCalc & constants.FLAG_BIT_C > 0) {}
     if (bitsToCalc & constants.FLAG_BIT_P > 0) {
-        const emptyRegVal: u8 = if (reg.* == 0) 1 else 0;
-        zFlag = emptyRegVal & constants.FLAG_BIT_Z;
+        pFlag = if (parityTable[reg.*] == 1) 0b11111111 & constants.FLAG_BIT_P else 0;
     }
     if (bitsToCalc & constants.FLAG_BIT_Z > 0) {
-        sFlag = (reg.* & 0b10000000) & constants.FLAG_BIT_S;
+        zFlag = if (reg.* == 0) 0b11111111 & constants.FLAG_BIT_Z else 0;
     }
     if (bitsToCalc & constants.FLAG_BIT_S > 0) {
-        pFlag = parityTable[reg.*] & constants.FLAG_BIT_P;
+        sFlag = if ((reg.* & 0b10000000) >> 7 == 1) 0b11111111 & constants.FLAG_BIT_S else 0;
     }
 
     setFlags(flags, (cFlag | pFlag | zFlag | sFlag));
@@ -229,6 +227,9 @@ test "LRR load A (000) from B (001)" {
     c.reg.B = expected;
     _ = LRR(&c);
     try std.testing.expectEqual(expected, c.reg.A);
+
+    // No flags affected
+    try testHelperAllFlagsEmpty(&c);
 }
 
 ///
@@ -268,6 +269,9 @@ test "LRM load B (001) from M (H + L)" {
 
     _ = LRM(&c);
     try std.testing.expectEqual(expected_val, c.reg.B);
+ 
+    // No flags affected
+    try testHelperAllFlagsEmpty(&c);
 }
 
 ///
@@ -306,6 +310,9 @@ test "LMR load M (H + L) from C (010)" {
 
     _ = LMR(&c);
     try std.testing.expectEqual(expected_val, mem.RAM[m]);
+ 
+    // No flags affected
+    try testHelperAllFlagsEmpty(&c);
 }
 
 ///
@@ -350,6 +357,9 @@ test "LRI load L (110) with immediate value" {
     _ = LRI(&c);
 
     try std.testing.expectEqual(expected_imm, c.reg.L);
+ 
+    // No flags affected
+    try testHelperAllFlagsEmpty(&c);
 }
 
 ///
@@ -400,21 +410,29 @@ test "LMI load M (H + L) with immediate value" {
     _ = LMI(&c);
 
     try std.testing.expectEqual(expected_imm, mem.RAM[m]);
+ 
+    // No flags affected
+    try testHelperAllFlagsEmpty(&c);
 }
 
 ///
 /// Increment content of index register R (R != A)
+/// Affects all flip-flops except Carry
 /// 00 DDD 000
 ///
 fn INR(c: *cpu.CPU) u8 {
     const mask: u8 = 0b00000111;
     const dest: u3 = @intCast((c.inst >> 3) & mask);
-    const reg: *u8 = c.getReg(dest);
-    if (reg.* == constants.IDX_A) {
+    if (dest == constants.IDX_A) {
         return 0;
     }
 
-    reg.* += 1;
+    const reg: *u8 = c.getReg(dest);
+    if (reg.* == 0b11111111) {
+        reg.* = 0;
+    } else {
+        reg.* += 1;
+    }
 
     calculateFlags(&c.flags, (constants.FLAG_BIT_P | constants.FLAG_BIT_Z | constants.FLAG_BIT_S), reg);
 
@@ -434,19 +452,57 @@ test "INR increments register D (011)" {
     try std.testing.expectEqual(expected, c.reg.D);
 }
 
+test "INR affects all flags except Carry" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 00 DDD 000
+    c.inst = @intCast(0b00011000);
+
+    // Initial Parity = 0 > expected after inc = 1
+    const initial_parity: u8 = 0b00001110;
+    c.reg.D = initial_parity;
+    _ = INR(&c);
+
+    try std.testing.expectEqual(1, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.Z);
+
+    // Sign Flag
+    const initial_sign: u8 = 0b01111111;
+    c.reg.D = initial_sign;
+    _ = INR(&c);
+    
+    try std.testing.expectEqual(0, c.flags.P);
+    try std.testing.expectEqual(1, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.Z);
+
+    // Zero Flag
+    const initial_zero: u8 = 0b11111111;
+    c.reg.D = initial_zero;
+    _ = INR(&c);
+    
+    try std.testing.expectEqual(1, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(1, c.flags.Z);
+}
+
 ///
 /// Decrement content of index register R (R != A)
+/// Affects all flip-flops except Carry
 /// 00 DDD 001
 ///
 fn DCR(c: *cpu.CPU) u8 {
     const mask: u8 = 0b00000111;
     const dest: u3 = @intCast((c.inst >> 3) & mask);
-    const reg: *u8 = c.getReg(dest);
-    if (reg.* == constants.IDX_A) {
+    if (dest == constants.IDX_A) {
         return 0;
     }
 
-    reg.* -= 1;
+    const reg: *u8 = c.getReg(dest);
+    if (reg.* == 0) {
+        reg.* = 0b11111111;
+    } else {
+        reg.* -= 1;
+    }
 
     calculateFlags(&c.flags, (constants.FLAG_BIT_P | constants.FLAG_BIT_Z | constants.FLAG_BIT_S), reg);
 
@@ -464,6 +520,39 @@ test "DCR decrements register E (100)" {
     _ = DCR(&c);
 
     try std.testing.expectEqual(expected, c.reg.E);
+}
+
+test "DCR affects all flags except Carry" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 00 DDD 000
+    c.inst = @intCast(0b00100001);
+
+    // Initial Parity = 0 > expected after dec = 1
+    const initial_parity: u8 = 0b00000111;
+    c.reg.E = initial_parity;
+    _ = DCR(&c);
+
+    try std.testing.expectEqual(1, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.Z);
+
+    // Sign Flag
+    const initial_sign: u8 = 0b00000000;
+    c.reg.E = initial_sign;
+    _ = DCR(&c);
+    
+    try std.testing.expectEqual(1, c.flags.P);
+    try std.testing.expectEqual(1, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.Z);
+
+    // Zero Flag
+    const initial_zero: u8 = 0b00000001;
+    c.reg.E = initial_zero;
+    _ = DCR(&c);
+    
+    try std.testing.expectEqual(1, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(1, c.flags.Z);
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *

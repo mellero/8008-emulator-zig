@@ -113,7 +113,7 @@ const REG = struct {
 /// * Carry bit provides the ability to do multiple precision binary arithmetic
 pub const FLAGS = struct {
     C: u1, // Carry
-    P: u1, // Even Parity
+    P: u1, // Even Parity - 1 when result of operation has even-number of bits
     Z: u1, // Zero
     S: u1, // Sign
 };
