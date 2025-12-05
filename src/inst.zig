@@ -26,7 +26,7 @@ pub const opCodes = [_]OpCodeFunc{
 //     // 7x  
              null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
 //     // 8x  
-             ADR,  ADR,  ADR,  ADR,  ADR,  ADR,  ADR,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,
+             ADR,  ADR,  ADR,  ADR,  ADR,  ADR,  ADR,  ADM,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,
 //     // 9x  
              NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,
 //     // Ax  
@@ -586,7 +586,7 @@ test "ADR Adds value in B (001) to Accumulator (A - 100)" {
     try std.testing.expectEqual((initial_a + to_add), c.reg.A);
 }
 
-test "ADR affects all flags" {
+test "ADR affects Parity flag" {
     var c: cpu.CPU = testHelperFlagCPUInit();
     // 10 000 SSS
     c.inst = @intCast(0b10000001);
@@ -606,7 +606,13 @@ test "ADR affects all flags" {
     try std.testing.expectEqual(0, c.flags.S);
     try std.testing.expectEqual(0, c.flags.Z);
     try std.testing.expectEqual(0, c.flags.C);
+}
 
+
+test "ADR affects Sign flag" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 10 000 SSS
+    c.inst = @intCast(0b10000001);
 
     // Sign Flag
     const initial_sign_val: u8 = 0b01111111;
@@ -619,8 +625,14 @@ test "ADR affects all flags" {
     try std.testing.expectEqual(1, c.flags.S);
     try std.testing.expectEqual(0, c.flags.Z);
     try std.testing.expectEqual(0, c.flags.C);
+}
 
-    
+
+test "ADR affects Zero flag" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 10 000 SSS
+    c.inst = @intCast(0b10000001);
+
     // Zero Flag + Carry Flag
     const initial_zero_val: u8 = 0b11111111;
     c.reg.A = initial_zero_val;
@@ -633,6 +645,168 @@ test "ADR affects all flags" {
     try std.testing.expectEqual(1, c.flags.Z);
     try std.testing.expectEqual(1, c.flags.C);
 }
+
+
+test "ADR affects Carry flag" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 10 000 SSS
+    c.inst = @intCast(0b10000001);
+
+    // Zero Flag + Carry Flag
+    const initial_zero_val: u8 = 0b11111111;
+    c.reg.A = initial_zero_val;
+    const to_add_zero: u8 = 0b00000011;
+    c.reg.B = to_add_zero;
+    _ = ADR(&c);
+
+    try std.testing.expectEqual(0, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.Z);
+    try std.testing.expectEqual(1, c.flags.C);
+}
+
+///
+/// Add value of register M (H + L) to Accumulator
+/// 10 000 111
+///
+fn ADM(c: *cpu.CPU) u8 {
+    const h16: u16 = @intCast(c.reg.H);
+    const l16: u16 = @intCast(c.reg.L);
+    const m: u16 = (h16 << 8) | (l16);
+
+    const result = @addWithOverflow(c.reg.A, mem.READ_MEM(m));
+    c.reg.A = result[0];
+    c.flags.C = result[1];
+
+    calculateFlags(&c.flags, constants.FLAG_BITS_ALL, &c.reg.A);
+
+    return 0;
+}
+
+test "ADM Adds value in M (H + L) to Accumulator (A - 100)" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 10 000 111
+    c.inst = @intCast(0b10000111);
+
+    const mem_val: u8 = 15;
+    const low: u8 = 0b00001111;
+    const high: u8 = 0b00110000;
+    const full_addr: u16 = 0b00110000_00001111;
+    c.reg.L = low;
+    c.reg.H = high;
+    const m: u16 = full_addr;
+
+    mem.RAM[m] = mem_val;
+
+    const initial_a: u8 = 10;
+    c.reg.A = initial_a;
+    _ = ADM(&c);
+
+    try std.testing.expectEqual((initial_a + mem_val), c.reg.A);
+}
+
+test "ADM affects Parity flag" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 10 000 111
+    c.inst = @intCast(0b10000111);
+
+    // Parity Flag
+    const mem_val: u8 = 0b00001111;
+    const low: u8 = 0b00001111;
+    const high: u8 = 0b00110000;
+    const full_addr: u16 = 0b00110000_00001111;
+    c.reg.L = low;
+    c.reg.H = high;
+    const m: u16 = full_addr;
+
+    mem.RAM[m] = mem_val;
+
+    const initial_a: u8 = 0b00001111;
+    // Expected parity = 1, 0b00011110;
+    c.reg.A = initial_a;
+    _ = ADM(&c);
+    try std.testing.expectEqual(1, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.Z);
+    try std.testing.expectEqual(0, c.flags.C);
+}
+
+test "ADM affects Sign flag" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 10 000 111
+    c.inst = @intCast(0b10000111);
+
+    // Sign Flag
+    const mem_val: u8 = 0b01111111;
+    const low: u8 = 0b00001111;
+    const high: u8 = 0b00110000;
+    const full_addr: u16 = 0b00110000_00001111;
+    c.reg.L = low;
+    c.reg.H = high;
+    const m: u16 = full_addr;
+
+    mem.RAM[m] = mem_val;
+
+    const initial_a: u8 = 0b00000001;
+    // Expected sign  = 1, 0b10000000;
+    c.reg.A = initial_a;
+    _ = ADM(&c);
+    try std.testing.expectEqual(0, c.flags.P);
+    try std.testing.expectEqual(1, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.Z);
+    try std.testing.expectEqual(0, c.flags.C);
+}
+
+test "ADM affects Carry flag" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 10 000 111
+    c.inst = @intCast(0b10000111);
+
+    // Sign Flag
+    const mem_val: u8 = 0b11111111;
+    const low: u8 = 0b00001111;
+    const high: u8 = 0b00110000;
+    const full_addr: u16 = 0b00110000_00001111;
+    c.reg.L = low;
+    c.reg.H = high;
+    const m: u16 = full_addr;
+
+    mem.RAM[m] = mem_val;
+
+    const initial_a: u8 = 0b00000011;
+    c.reg.A = initial_a;
+    _ = ADM(&c);
+    try std.testing.expectEqual(0, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.Z);
+    try std.testing.expectEqual(1, c.flags.C);
+}
+
+test "ADM affects Zero flag" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 10 000 111
+    c.inst = @intCast(0b10000111);
+
+    // Sign Flag
+    const mem_val: u8 = 0b11111111;
+    const low: u8 = 0b00001111;
+    const high: u8 = 0b00110000;
+    const full_addr: u16 = 0b00110000_00001111;
+    c.reg.L = low;
+    c.reg.H = high;
+    const m: u16 = full_addr;
+
+    mem.RAM[m] = mem_val;
+
+    const initial_a: u8 = 0b00000001;
+    c.reg.A = initial_a;
+    _ = ADM(&c);
+    try std.testing.expectEqual(1, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(1, c.flags.Z);
+    try std.testing.expectEqual(1, c.flags.C);
+}
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // *                                            Program Counter and Stack Control Inst                                               *
