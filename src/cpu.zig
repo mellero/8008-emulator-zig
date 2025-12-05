@@ -112,10 +112,10 @@ const REG = struct {
 /// * These bits provide conditional branching capability through CALL, JUMP, or RETURN on condition instructions.
 /// * Carry bit provides the ability to do multiple precision binary arithmetic
 pub const FLAGS = struct {
-    C: u1, // Carry
+    C: u1, // Carry - 1 when result of operation resulted in under-overflow
     P: u1, // Even Parity - 1 when result of operation has even-number of bits
-    Z: u1, // Zero
-    S: u1, // Sign
+    Z: u1, // Zero - 1 when result of operation is zero
+    S: u1, // Sign - 1 when result of operation has its leftmost (Most Significant Bit) as 1
 };
 
 pub const CPU = struct {

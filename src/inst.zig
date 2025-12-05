@@ -26,7 +26,7 @@ pub const opCodes = [_]OpCodeFunc{
 //     // 7x  
              null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
 //     // 8x  
-             NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,
+             ADR,  ADR,  ADR,  ADR,  ADR,  ADR,  ADR,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,
 //     // 9x  
              NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,
 //     // Ax  
@@ -169,12 +169,12 @@ test "Set flags sets flags properly" {
 
 
 fn calculateFlags(flags: *cpu.FLAGS, bitsToCalc: u8, reg: *u8) void {
-    const cFlag: u8 = 0;
+    // Manually set by inst
+    const cFlag: u8 = flags.C;
     var pFlag: u8 = 0;
     var zFlag: u8 = 0;
     var sFlag: u8 = 0;
     
-    if (bitsToCalc & constants.FLAG_BIT_C > 0) {}
     if (bitsToCalc & constants.FLAG_BIT_P > 0) {
         pFlag = if (parityTable[reg.*] == 1) 0b11111111 & constants.FLAG_BIT_P else 0;
     }
@@ -428,11 +428,8 @@ fn INR(c: *cpu.CPU) u8 {
     }
 
     const reg: *u8 = c.getReg(dest);
-    if (reg.* == 0b11111111) {
-        reg.* = 0;
-    } else {
-        reg.* += 1;
-    }
+    const result = @addWithOverflow(reg.*, 1);
+    reg.* = result[0];
 
     calculateFlags(&c.flags, (constants.FLAG_BIT_P | constants.FLAG_BIT_Z | constants.FLAG_BIT_S), reg);
 
@@ -498,11 +495,8 @@ fn DCR(c: *cpu.CPU) u8 {
     }
 
     const reg: *u8 = c.getReg(dest);
-    if (reg.* == 0) {
-        reg.* = 0b11111111;
-    } else {
-        reg.* -= 1;
-    }
+    const result = @subWithOverflow(reg.*, 1);
+    reg.* = result[0];
 
     calculateFlags(&c.flags, (constants.FLAG_BIT_P | constants.FLAG_BIT_Z | constants.FLAG_BIT_S), reg);
 
@@ -559,6 +553,86 @@ test "DCR affects all flags except Carry" {
 // *                                                   Accumulator Group Insts.                                                      *
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
+///
+/// Add value of index register R to Accumulator
+/// 10 000 SSS
+///
+fn ADR(c: *cpu.CPU) u8 {
+    const mask: u8 = 0b00000111;
+    const src: u3 = @intCast(c.inst & mask);
+    const srcR: *u8 = c.getReg(src);
+
+    const result = @addWithOverflow(c.reg.A, srcR.*);
+    c.reg.A = result[0];
+    c.flags.C = result[1];
+
+    calculateFlags(&c.flags, constants.FLAG_BITS_ALL, &c.reg.A);
+
+    return 0;
+}
+
+test "ADR Adds value in B (001) to Accumulator (A - 100)" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 10 000 SSS
+    c.inst = @intCast(0b10000001);
+    const initial_a: u8 = 10;
+    c.reg.A = initial_a;
+
+    // Load a new value into B, then add
+    const to_add: u8 = 15;
+    c.reg.B = to_add;
+    _ = ADR(&c);
+
+    try std.testing.expectEqual((initial_a + to_add), c.reg.A);
+}
+
+test "ADR affects all flags" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 10 000 SSS
+    c.inst = @intCast(0b10000001);
+
+    // Parity Flag
+    // Initial Parity = 0 
+    const initial_parity_val: u8 = 0b00000100;
+    c.reg.A = initial_parity_val;
+
+    // Load a new value into B, then add
+    // Expected parity = 1
+    const to_add_parity: u8 = 0b00001011;
+    c.reg.B = to_add_parity;
+    _ = ADR(&c);
+
+    try std.testing.expectEqual(1, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.Z);
+    try std.testing.expectEqual(0, c.flags.C);
+
+
+    // Sign Flag
+    const initial_sign_val: u8 = 0b01111111;
+    c.reg.A = initial_sign_val;
+    const to_add_sign: u8 = 0b00000001;
+    c.reg.B = to_add_sign;
+    _ = ADR(&c);
+
+    try std.testing.expectEqual(0, c.flags.P);
+    try std.testing.expectEqual(1, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.Z);
+    try std.testing.expectEqual(0, c.flags.C);
+
+    
+    // Zero Flag + Carry Flag
+    const initial_zero_val: u8 = 0b11111111;
+    c.reg.A = initial_zero_val;
+    const to_add_zero: u8 = 0b00000001;
+    c.reg.B = to_add_zero;
+    _ = ADR(&c);
+
+    try std.testing.expectEqual(1, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(1, c.flags.Z);
+    try std.testing.expectEqual(1, c.flags.C);
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // *                                            Program Counter and Stack Control Inst                                               *
