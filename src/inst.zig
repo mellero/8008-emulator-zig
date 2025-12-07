@@ -17,7 +17,7 @@ pub const opCodes = [_]OpCodeFunc{
     // 0x  
              HLT,  HLT,  NOOP,  null, NOOP,  null, LRI,  null, INR,  DCR,  NOOP,  null, NOOP, null,  LRI,  null,
 //     // 1x  
-             INR,  DCR,  NOOP,  null, NOOP,  null, LRI,  null, INR,  DCR,  NOOP,  null, NOOP, null,  LRI,  null,
+             INR,  DCR,  NOOP,  null, ADI,  null, LRI,  null, INR,  DCR,  NOOP,  null, NOOP, null,  LRI,  null,
 //     // 2x  
              INR,  DCR,  null, null, NOOP,  null, LRI,  null, INR,  DCR,  null, null, NOOP, null,  LRI,  null,
 //     // 3x  
@@ -31,7 +31,7 @@ pub const opCodes = [_]OpCodeFunc{
 //     // 7x  
              null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
 //     // 8x  
-             ADR,  ADR,  ADR,  ADR,  ADR,  ADR,  ADR,  ADM,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,
+             ADR,  ADR,  ADR,  ADR,  ADR,  ADR,  ADR,  ADM,  ACR,  ACR,  ACR,  ACR,  ACR,  ACR,  ACR,  NOOP,
 //     // 9x  
              NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,  NOOP,
 //     // Ax  
@@ -936,6 +936,197 @@ test "ADI affects Zero flag" {
     try std.testing.expectEqual(1, c.flags.P);
     try std.testing.expectEqual(0, c.flags.S);
     try std.testing.expectEqual(1, c.flags.Z);
+    try std.testing.expectEqual(1, c.flags.C);
+}
+
+
+///
+/// Add carry and value of index register R to Accumulator
+/// 10 001 SSS
+///
+fn ACR(c: *cpu.CPU) u8 {
+    const mask: u8 = 0b00000111;
+    const src: u3 = @intCast(c.inst & mask);
+    const srcR: *u8 = c.getReg(src);
+
+    const carry_flag = c.flags.C;
+
+    const result_src_add = @addWithOverflow(c.reg.A, srcR.*);
+    const src_caused_carry = result_src_add[1];
+
+    const result_carry = @addWithOverflow(result_src_add[0], carry_flag);
+    c.reg.A = result_carry[0];
+    const carry_caused_carry = result_carry[1];
+
+    c.flags.C = src_caused_carry | carry_caused_carry;
+
+    calculateFlags(&c.flags, constants.FLAG_BITS_ALL, &c.reg.A);
+
+    return 0;
+}
+
+test "ACR Adds carry flag and value in C (010) to Accumulator (A - 100)" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 10 001 SSS
+    c.inst = @intCast(0b10001010);
+    const initial_a: u8 = 10;
+    c.reg.A = initial_a;
+
+    // Set the initial carry
+    c.flags.C = 1;
+
+    // Load a new value into C, then add
+    const to_add: u8 = 15;
+    c.reg.C = to_add;
+    _ = ACR(&c);
+
+    try std.testing.expectEqual((initial_a + to_add + 1), c.reg.A);
+
+    // Reset and test without carry flag set
+    c.reg.A = initial_a;
+    c.flags.C = 0;
+    c.reg.C = to_add;
+    _ = ACR(&c);
+
+    try std.testing.expectEqual((initial_a + to_add + 0), c.reg.A);
+}
+
+test "ACR affects Parity flag" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 10 001 SSS
+    c.inst = @intCast(0b10001010);
+    const initial_parity_val: u8 = 0b00001100;
+    c.reg.A = initial_parity_val;
+
+    // Set the initial carry
+    c.flags.C = 1;
+
+    // Load a new value into C, then add
+    const to_add: u8 = 0b00000010;
+    c.reg.C = to_add;
+    _ = ACR(&c);
+
+    // Expected parity = 1, 0b00001111
+    try std.testing.expectEqual(1, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.Z);
+    try std.testing.expectEqual(0, c.flags.C);
+
+    // Rest and test without carry flag set
+    c.reg.A = initial_parity_val;
+    c.flags.C = 0;
+    c.reg.C = to_add;
+    _ = ACR(&c);
+
+    // Expected parity = 0, 0b00001110
+    try std.testing.expectEqual(0, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.Z);
+    try std.testing.expectEqual(0, c.flags.C);
+}
+
+
+test "ACR affects Sign flag" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 10 001 SSS
+    c.inst = @intCast(0b10001010);
+    const initial_sign_val: u8 = 0b01111111;
+    c.reg.A = initial_sign_val;
+
+    // Set the initial carry
+    c.flags.C = 1;
+
+    // Load a new value into C, then add
+    const to_add: u8 = 0b00000010;
+    c.reg.C = to_add;
+    _ = ACR(&c);
+
+    // Expected sign = 1, 0b10000010
+    try std.testing.expectEqual(1, c.flags.P);
+    try std.testing.expectEqual(1, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.Z);
+    try std.testing.expectEqual(0, c.flags.C);
+
+    // Rest and test without carry flag set
+    c.reg.A = initial_sign_val;
+    c.flags.C = 0;
+    c.reg.C = to_add;
+    _ = ACR(&c);
+
+    // Expected sign = 1, 0b10000001
+    try std.testing.expectEqual(1, c.flags.P);
+    try std.testing.expectEqual(1, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.Z);
+    try std.testing.expectEqual(0, c.flags.C);
+}
+
+
+test "ACR affects Zero flag" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 10 001 SSS
+    c.inst = @intCast(0b10001010);
+    const initial_zero_val: u8 = 0b11111110;
+    c.reg.A = initial_zero_val;
+
+    // Set the initial carry
+    c.flags.C = 1;
+
+    // Load a new value into C, then add
+    const to_add: u8 = 0b00000001;
+    c.reg.C = to_add;
+    _ = ACR(&c);
+
+    // Expected zero = 1 
+    try std.testing.expectEqual(1, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(1, c.flags.Z);
+    try std.testing.expectEqual(1, c.flags.C);
+
+    // Rest and test without carry flag set
+    c.reg.A = initial_zero_val;
+    c.flags.C = 0;
+    c.reg.C = to_add + 1;
+    _ = ACR(&c);
+
+    // Expected zero = 1
+    try std.testing.expectEqual(1, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(1, c.flags.Z);
+    try std.testing.expectEqual(1, c.flags.C);
+}
+
+
+test "ACR affects Carry flag" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 10 001 SSS
+    c.inst = @intCast(0b10001010);
+    const initial_carry_val: u8 = 0b11111111;
+    c.reg.A = initial_carry_val;
+
+    // Set the initial carry
+    c.flags.C = 1;
+
+    // Load a new value into C, then add
+    const to_add: u8 = 0b00000011;
+    c.reg.C = to_add;
+    _ = ACR(&c);
+
+    // Expected carry = 1, 0b00000011
+    try std.testing.expectEqual(1, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.Z);
+    try std.testing.expectEqual(1, c.flags.C);
+
+    // Rest and test without carry flag set
+    c.reg.A = initial_carry_val;
+    c.flags.C = 0;
+    c.reg.C = to_add;
+    _ = ACR(&c);
+
+    // Expected carry = 1, 0b00000010
+    try std.testing.expectEqual(0, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.Z);
     try std.testing.expectEqual(1, c.flags.C);
 }
 
