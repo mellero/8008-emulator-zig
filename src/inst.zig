@@ -4,6 +4,11 @@ const cpu = @import("cpu.zig");
 const mem = @import("mem.zig");
 const constants = @import("const.zig");
 
+// TODOS:
+// Add tests for any container insts, to ensure reset of container value(s)
+
+
+
 pub const OpCodeFunc = ?fn (*cpu.CPU) u8;
 
 // zig fmt: off
@@ -328,7 +333,6 @@ fn LRI(c: *cpu.CPU) u8 {
     if (cont.destR) |destR| {
         const imm: u8 = c.inst;
         destR.* = imm;
-        // LOG?
 
         // reset container for next use
         cont.destR = null;
@@ -807,6 +811,133 @@ test "ADM affects Zero flag" {
     try std.testing.expectEqual(1, c.flags.C);
 }
 
+///
+/// Add immediate value to Accumulator
+/// 00 000 100
+///
+fn ADI(c: *cpu.CPU) u8 {
+    // Container variable to skip to immediate value next cycle
+    const cont = struct {
+        var first: bool = true;
+    };
+
+    if (cont.first) {
+        cont.first = false;
+        return 1;
+    } else {
+        const result = @addWithOverflow(c.reg.A, c.inst);
+        c.reg.A = result[0];
+        c.flags.C = result[1];
+
+        // reset container for next cycle
+        cont.first = true;
+
+        calculateFlags(&c.flags, constants.FLAG_BITS_ALL, &c.reg.A);
+        return 0;
+    }
+}
+
+
+test "ADI Adds immediate value to Accumulator (A - 100)" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 00 000 100
+    c.inst = @intCast(0b00000100);
+
+    const initial_val = 15;
+    c.reg.A = initial_val;
+    const cycle = ADI(&c);
+    try std.testing.expectEqual(1, cycle);
+
+    const imm_val = 15;
+    c.inst = imm_val; 
+    _ = ADI(&c);
+
+    try std.testing.expectEqual((initial_val + imm_val), c.reg.A);
+}
+
+test "ADI affects Parity flag" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 00 000 100
+    c.inst = @intCast(0b00000100);
+
+    const initial_val: u8 = 0b00001111;
+    c.reg.A = initial_val;
+    _ = ADI(&c);
+
+    const imm_val: u8 = 0b00001111;
+    c.inst = imm_val; 
+    _ = ADI(&c);
+
+    // Expected parity = 1, 0b00011110;
+
+    try std.testing.expectEqual(1, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.Z);
+    try std.testing.expectEqual(0, c.flags.C);
+}
+
+test "ADI affects Sign flag" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 00 000 100
+    c.inst = @intCast(0b00000100);
+
+    const initial_val: u8 = 0b01111111;
+    c.reg.A = initial_val;
+    _ = ADI(&c);
+
+    const imm_val: u8 = 0b00000001;
+    c.inst = imm_val; 
+    _ = ADI(&c);
+
+    // Expected sign = 1, 0b10000000;
+
+    try std.testing.expectEqual(0, c.flags.P);
+    try std.testing.expectEqual(1, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.Z);
+    try std.testing.expectEqual(0, c.flags.C);
+}
+
+test "ADI affects Carry flag" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 00 000 100
+    c.inst = @intCast(0b00000100);
+    
+    const initial_val: u8 = 0b11111111;
+    c.reg.A = initial_val;
+    _ = ADI(&c);
+
+    const imm_val: u8 = 0b00000010;
+    c.inst = imm_val; 
+    _ = ADI(&c);
+
+    // Expected carry = 1, 0b00000001;
+
+    try std.testing.expectEqual(0, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(0, c.flags.Z);
+    try std.testing.expectEqual(1, c.flags.C);
+}
+
+test "ADI affects Zero flag" {
+    var c: cpu.CPU = testHelperFlagCPUInit();
+    // 00 000 100
+    c.inst = @intCast(0b00000100);
+
+    const initial_val: u8 = 0b11111111;
+    c.reg.A = initial_val;
+    _ = ADI(&c);
+
+    const imm_val: u8 = 0b00000001;
+    c.inst = imm_val; 
+    _ = ADI(&c);
+
+    // Expected carry = 1, 0b00000000;
+
+    try std.testing.expectEqual(1, c.flags.P);
+    try std.testing.expectEqual(0, c.flags.S);
+    try std.testing.expectEqual(1, c.flags.Z);
+    try std.testing.expectEqual(1, c.flags.C);
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // *                                            Program Counter and Stack Control Inst                                               *
